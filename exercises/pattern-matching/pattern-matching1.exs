@@ -1,11 +1,11 @@
 # EXERCISE NOT FINISHED YET
-# In Elixir, the = sign is more similar to mathematics = sign.
+# In Elixir, the = sign is more similar to mathematics' = sign.
 x = 1
 # What has to be in the right side for this "equation" to be true?
 ?? = x
 
 # Create new variables, y and z, with values extracted from the tuple
-y = nil # You should delete this line and create y and z both together with x
+y = nil # You should delete or comment this line and create y and z both together with x
 z = nil # Same story here!
 {x} = {1, 2, 3}
 
@@ -25,7 +25,7 @@ IO.puts("Second stop: x = #{x}, y = #{y} and z = #{z}")
 # Can you do it creating only ONE more variable? Name it "variable", please (:
 ?? = {:ok, "Okay!"}
 
-IO.puts("Last \"variable\": #{variable}\n")
+# IO.puts("Last \"variable\": #{variable}\n")
 
 # https://elixirschool.com/en/lessons/basics/pattern_matching#match-operator-0
 
