@@ -14,14 +14,13 @@ defmodule ElixirTutor.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger, :fs]
+      extra_applications: [:logger]
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:fs, github: "synrc/fs"},
       {:file_system, "~> 0.2"}
     ]
   end
