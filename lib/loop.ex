@@ -22,12 +22,11 @@ defmodule ElixirTutor.Loop do
   defp handle_compilation({:ok, filename}) do
     Print.successfully_compiled(filename)
 
-    # Should stay in the same place untill comment is removed
+    # Should stay in the same file untill comment is removed
     if FileUtils.file_has_unfinished_comment?(filename) do
       Print.delete_unfinished_comment_to_proceed()
       listen({:ok, filename})
-      # Should go to next exercise
-    else
+    else # Should go to next exercise
       FileUtils.first_unfinished_file()
       |> handle_file()
       |> compile_pipeline()

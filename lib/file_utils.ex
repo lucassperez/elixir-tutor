@@ -34,7 +34,36 @@ defmodule ElixirTutor.FileUtils do
   end
 
   @doc """
-  Returns a true or false indicating if a given file has the string
+  Returns a list of the first files following the order in
+  ElixirTutor.Exercises.all_files/0 which does not have the string
+  "# EXERCISE NOT FINISHED YET" and could compile without errors.
+  It returns {:ok, list} or {:error, :not_found} when there are no such files.
+  It stops looking the moment it finds a file that is not finished or is not
+  compilable. That means if file 1 is finished, file 2 is not finished and file
+  3 is finished, it is going to return only file 1, because the moment it found
+  out file 2 is not finished, it stopped looking.
+  This function kinda sucks, because when we try to compile files, they get
+  executed and the IEx screen is cleared for each one of them.
+  """
+  def first_finished_and_compilable_files do
+    Exercises.all_files()
+    |> Enum.reduce_while([], fn filename, acc ->
+      with false <- file_has_unfinished_comment?(filename),
+           {:ok, _} <- try_to_compile(filename) do
+        {:cont, [filename | acc]}
+      else
+        _ ->
+          {:halt, acc}
+      end
+    end)
+    |> case do
+      [] -> {:error, :not_found}
+      list -> {:ok, list}
+    end
+  end
+
+  @doc """
+  Returns true or false indicating if a given file has the string
   "# EXERCISE NOT FINISHED YET"
   """
   def file_has_unfinished_comment?(filename) do
@@ -51,7 +80,7 @@ defmodule ElixirTutor.FileUtils do
     search_unfinished_comment(rest)
   end
 
-  defp search_unfinished_comment(""), do: nil
+  defp search_unfinished_comment(""), do: false
 
   @doc """
   Tries to compile a given file.
