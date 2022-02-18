@@ -49,7 +49,7 @@ defmodule ElixirTutor.FileUtils do
     Exercises.all_files()
     |> Enum.reduce_while([], fn filename, acc ->
       with false <- file_has_unfinished_comment?(filename),
-           {:ok, _} <- try_to_compile(filename) do
+           {:ok, _} <- old_try_to_compile(filename) do
         {:cont, [filename | acc]}
       else
         _ ->
@@ -72,13 +72,11 @@ defmodule ElixirTutor.FileUtils do
     |> search_unfinished_comment()
   end
 
-  defp search_unfinished_comment("# EXERCISE NOT FINISHED YET" <> _rest) do
-    true
-  end
+  defp search_unfinished_comment("# EXERCISE NOT FINISHED YET" <> _rest),
+    do: true
 
-  defp search_unfinished_comment(<<_c::binary-size(1)>> <> rest) do
-    search_unfinished_comment(rest)
-  end
+  defp search_unfinished_comment(<<_c::binary-size(1)>> <> rest),
+    do: search_unfinished_comment(rest)
 
   defp search_unfinished_comment(""), do: false
 
@@ -87,16 +85,32 @@ defmodule ElixirTutor.FileUtils do
   If successful, returns {:ok, filename}.
   If not, returns {:error, {%CompileError{}, filename}}
   """
-  def try_to_compile(filename) do
+  def old_try_to_compile(filename) do
     try do
       IEx.Helpers.clear()
       ElixirTutor.Print.compiling(filename)
       IEx.Helpers.c(filename)
       {:ok, filename}
     catch
-      # TODO understand while compile error is always like this:
+      # TODO understand why compile error is always like this:
       # %CompileError{description: "compile error", file: nil, line: nil}
       :error, %CompileError{} = error -> {:error, {error, filename}}
+    end
+  end
+
+  @doc """
+  Tries to compile a given file.
+  If succesful, returns {:ok, filename, message}.
+  If not, returns {:error, filename, message}
+  """
+  # TODO think about always using --warning-as-erros
+  def try_to_compile(filename, opts \\ []) do
+    ElixirTutor.Print.compiling(filename)
+
+    System.cmd("elixirc", [filename], opts)
+    |> case do
+      {message, 0} -> {:ok, filename, message}
+      {message, _non_zero_exit_code} -> {:error, filename, message}
     end
   end
 end

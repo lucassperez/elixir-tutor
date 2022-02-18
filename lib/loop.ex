@@ -15,34 +15,37 @@ defmodule ElixirTutor.Loop do
 
   defp compile_pipeline(filename) do
     filename
-    |> FileUtils.try_to_compile()
+    |> FileUtils.try_to_compile(stderr_to_stdout: true)
+    |> tap(fn _ ->
+      IEx.Helpers.clear()
+      IO.puts("")
+    end)
     |> handle_compilation()
   end
 
-  defp handle_compilation({:ok, filename}) do
+  defp handle_compilation({:ok, filename, _message}) do
     Print.successfully_compiled(filename)
 
-    # Should stay in the same file untill comment is removed
     if FileUtils.file_has_unfinished_comment?(filename) do
+      # Should stay in the same file untill comment is removed
       Print.delete_unfinished_comment_to_proceed()
       listen({:ok, filename})
-    else # Should go to next exercise
+    else
+      # Should go to next exercise
       FileUtils.first_unfinished_file()
       |> handle_file()
       |> compile_pipeline()
     end
   end
 
-  defp handle_compilation({:error, {_error, filename}}) do
-    Print.failed_to_compile(filename)
+  defp handle_compilation({:error, filename, message}) do
+    Print.failed_to_compile(filename, message)
     listen({:ok, filename})
   end
 
   defp listen({:ok, filename}) do
     receive do
-      {:file_event, _worker_pid, {^filename, events}} ->
-        IO.puts("\e[36mDEBUG: \e[1m#{filename} with events: #{inspect(events)}\e[0m")
-        IO.puts("\e[36mDEBUG: \e[1m#{inspect(Process.info(self(), :messages))}\e[0m")
+      {:file_event, _worker_pid, {^filename, _events}} ->
         read_all_messages(self())
         compile_pipeline(filename)
 
@@ -60,9 +63,9 @@ defmodule ElixirTutor.Loop do
             files_finished()
         end
 
-      x ->
+      unexpected_error ->
         Print.unexpected_error()
-        inspect(x)
+        inspect(unexpected_error)
     end
   end
 
